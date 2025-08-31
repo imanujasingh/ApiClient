@@ -1,0 +1,347 @@
+{
+  "info": {
+    "name": "Encryption Client API",
+    "description": "Postman collection for the Encryption Client that calls the main Encryption API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "clientBaseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "encryptionBaseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Health check should pass\", function() {",
+              "    pm.expect(pm.response.text()).to.include(\"Healthy\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/health",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Encryptable Fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Should return encryptable fields\", function() {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"success\");",
+              "    pm.expect(jsonData.encryptableFields).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/fields/encryptable",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "fields", "encryptable"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Encrypt JSON Data",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Encryption should succeed\", function() {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"success\");",
+              "    pm.expect(jsonData.data.ssn).to.not.eql(\"123-45-6789\");",
+              "    pm.expect(jsonData.data.email).to.not.eql(\"john@bank.com\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"ssn\": \"123-45-6789\",\n  \"email\": \"john@bank.com\",\n  \"phone\": \"555-0123\",\n  \"creditCard\": \"4111-1111-1111-1111\",\n  \"age\": 30,\n  \"address\": \"123 Main St, New York, NY\"\n}"
+        },
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/encrypt",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "encrypt"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Decrypt JSON Data",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Decryption should succeed\", function() {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"success\");",
+              "    pm.expect(jsonData.data.ssn).to.eql(\"123-45-6789\");",
+              "    pm.expect(jsonData.data.email).to.eql(\"john@bank.com\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"ssn\": \"PASTE_ENCRYPTED_SSN_HERE\",\n  \"email\": \"PASTE_ENCRYPTED_EMAIL_HERE\",\n  \"phone\": \"PASTE_ENCRYPTED_PHONE_HERE\",\n  \"creditCard\": \"PASTE_ENCRYPTED_CREDITCARD_HERE\",\n  \"age\": 30,\n  \"address\": \"123 Main St, New York, NY\"\n}"
+        },
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/decrypt",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "decrypt"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Encrypt Single Field",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Single field encryption should succeed\", function() {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"success\");",
+              "    pm.expect(jsonData.field).to.eql(\"ssn\");",
+              "    pm.expect(jsonData.originalValue).to.eql(\"123-45-6789\");",
+              "    pm.expect(jsonData.encryptedValue).to.not.eql(\"123-45-6789\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/encrypt/field?fieldName=ssn&value=123-45-6789",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "encrypt", "field"],
+          "query": [
+            {
+              "key": "fieldName",
+              "value": "ssn"
+            },
+            {
+              "key": "value",
+              "value": "123-45-6789"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Decrypt Single Field",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Single field decryption should succeed\", function() {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"success\");",
+              "    pm.expect(jsonData.field).to.eql(\"ssn\");",
+              "    pm.expect(jsonData.decryptedValue).to.eql(\"123-45-6789\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/decrypt/field?fieldName=ssn&value=PASTE_ENCRYPTED_VALUE_HERE",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "decrypt", "field"],
+          "query": [
+            {
+              "key": "fieldName",
+              "value": "ssn"
+            },
+            {
+              "key": "value",
+              "value": "PASTE_ENCRYPTED_VALUE_HERE"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Example - User Registration Data",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Smith\",\n  \"email\": \"alice.smith@bank.com\",\n  \"ssn\": \"111-22-3333\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"phone\": \"+1-555-0123\",\n  \"accountNumber\": \"ACC123456789\",\n  \"password\": \"SecurePass123!\",\n  \"securityQuestion\": \"What was your first pet's name?\",\n  \"securityAnswer\": \"Fluffy\"\n}"
+        },
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/encrypt",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "encrypt"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Example - Financial Transaction",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionId\": \"TXN987654321\",\n  \"amount\": 1500.75,\n  \"currency\": \"USD\",\n  \"creditCard\": \"5555-6666-7777-8888\",\n  \"expiryDate\": \"12/25\",\n  \"cvv\": \"123\",\n  \"customerEmail\": \"customer@example.com\",\n  \"customerPhone\": \"555-9876\",\n  \"billingAddress\": {\n    \"street\": \"456 Oak Ave\",\n    \"city\": \"New York\",\n    \"zipCode\": \"10001\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/encrypt",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "encrypt"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Example - Healthcare Data",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patientId\": \"PAT123456\",\n  \"firstName\": \"Robert\",\n  \"lastName\": \"Johnson\",\n  \"email\": \"robert.johnson@email.com\",\n  \"phone\": \"555-7890\",\n  \"ssn\": \"999-88-7777\",\n  \"dateOfBirth\": \"1985-08-12\",\n  \"medicalRecordNumber\": \"MRN654321\",\n  \"insuranceId\": \"INS987654\",\n  \"primaryCarePhysician\": \"Dr. Emily Wilson\",\n  \"allergies\": [\"Penicillin\", \"Shellfish\"],\n  \"currentMedications\": [\"Lisinopril 10mg\", \"Metformin 500mg\"]\n}"
+        },
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/encrypt",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "encrypt"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Error Case - Invalid Data",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Should return error for invalid data\", function() {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"invalidField\": \"should cause error\"\n}"
+        },
+        "url": {
+          "raw": "{{clientBaseUrl}}/api/client/encrypt",
+          "host": ["{{clientBaseUrl}}"],
+          "path": ["api", "client", "encrypt"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Direct Encryption API Call (For Comparison)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"data\": {\n    \"name\": \"John Doe\",\n    \"ssn\": \"123-45-6789\",\n    \"email\": \"john@bank.com\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{encryptionBaseUrl}}/api/json/encrypt",
+          "host": ["{{encryptionBaseUrl}}"],
+          "path": ["api", "json", "encrypt"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
